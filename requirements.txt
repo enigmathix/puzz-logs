@@ -1,0 +1,6 @@
+google-cloud-logging==3.5.0
+appengine-python-standard>=1.0.0
+Flask==2.2.3
+flask_login==0.6.3
+werkzeug==2.3.7
+pytz

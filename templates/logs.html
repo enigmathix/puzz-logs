@@ -1,0 +1,113 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="{{ cdn }}/admin.css" />
+<link rel="icon" type="image/x-icon" sizes="16x16" href="{{ cdn }}/favicon.ico" />
+<script>
+	const dateOptions = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZoneName: 'short' };
+</script>
+<script src="{{ cdn }}/admin.js"></script>
+<title>Edric's Hunts - Logs</title>
+</head>
+<body>
+	<form action="/" method="post">
+		<input type="hidden" name="timezone" class="timezone"/>
+		<div class="form-grid">
+			<div class="logsrow">
+				<div class="logsheader">
+					<a class="arrow" href="?level={{ selectedLevel }}&t={{ prev }}&search={{ search }}">◀️</a>
+					From: <input name="starttime" type="datetime-local" class="datetime" value="{{ starttime }}">
+					To: <input name="endtime" type="datetime-local" class="datetime" value="{{ endtime }}">
+					<a class="arrow" href="?level={{ selectedLevel }}&search={{ search }}">⏩</a>
+				</div>
+			</div>
+			<div class="logsrow">
+				<div class="logsheader">
+					<select name="level" id="level" onChange="this.form.submit();">
+						{% for label, level in levels %}
+							{% if label == selectedLevel %}
+								<option selected value="{{ label }}">{{ label }}</option>
+							{% else %}
+								<option value="{{ label }}">{{ label }}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+					<input name="search" type="search" value="{{ search }}" placeholder="Search" size="50">
+					<input type="submit">
+				</div>
+			</div>
+		</div>
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					{% if category == 'error' %}
+						<h3 class="{{ category }}">{{ message }}</h3>
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+		<div class="logs">
+			<table>
+				<thead>
+					<tr>
+						<th>Time</th>
+						{% if selectedLevel == 'ENGINE' %}
+						<th>IP</th>
+						<th>URL</th>
+						<th>Lat</th>
+						<th>Wait</th>
+						<th>Len</th>
+						{% else %}
+						<th>Hunt</th>
+						<th>Team</th>
+						<th>IP</th>
+						<th>URL</th>
+						{% endif %}
+						<th>Agent</th>
+						<th>Message</th>
+					</tr>
+				</thead>
+				{% for log in logs %}
+					{% if log.status or log.messages %}
+					<tr>
+						<td class="right date time">{{ log.time }}</a></td>
+						{% if selectedLevel != 'ENGINE' %}
+						<td>{{ log.hunt }}</td>
+						<td>
+							{% if log.user %}
+								{{ log.user|truncate(20) }}
+							{% endif %}
+						</td>
+						{% endif %}
+						<td class="right"><a href="https://ipinfo.io/{{ log.ip }}" target="_blank">{{ log.ip|reverse|truncate(16)|reverse }}</a></td>
+						{% if selectedLevel == 'ENGINE' %}
+						<td><abbr class="s{{ log.status[:-2] }}" title="{{ log.url }}">{{ log.url|truncate(22) }}</abbr></td>
+						<td class="right">{{ log.latency }}</td>
+						<td class="right">{{ log.wait }}</td>
+						<td class="right">{{ log.len }}</td>
+						{% else %}
+						<td><a class="s{{ log.status[:-2] }}" title="{{ log.status }}" href="https://{{log.hunt}}.{{ domain }}{{ log.url }}" target="_blank">{{ log.url|truncate(22) }}</a></td>
+						{% endif %}
+						<td><abbr title="{{ log.agent }}">{{ log.client.os }}&nbsp;{{ log.client.browser }}</abbr></td>
+						<td>
+							{% if log.messages|length == 1 %}
+								<div class="left {{ log.messages.0.0 }}">{{ log.messages.0.1 }}</div>
+							{% else %}
+								<ul>
+									{% for message in log.messages %}
+										<li class="left {{ message.0 }}">{{ message.1 }}</li>
+									{% endfor %}
+								</ul>
+							{% endif %}
+						</td>
+					</tr>
+					{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+	</form>
+	<div class="form-row">
+	<a class="arrow left" href="?level={{ selectedLevel }}&t={{ prev }}&search={{ search }}">◀️</a>
+	<a class="arrow right" href="?level={{ selectedLevel }}&search={{ search }}">⏩</a>
+	</div>
+</body>
+</html>
